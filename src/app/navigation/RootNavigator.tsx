@@ -22,10 +22,10 @@ import HistoryScreen from "../../features/history/screens/HistoryScreen";
 
 export type AuthStackParamList = {
   Login: undefined;
-  RegisterTerms: undefined;
+  RegisterTerms: { registerData: any };
   RegisterPersonal: undefined;
-  RegisterAcademic: undefined;
-  RegisterCredentials: undefined;
+  RegisterAcademic: { personalData: any };
+  RegisterCredentials: { personalData: any, academicData: any };
 };
 
 import DashboardScreen from "../../features/dashboard/screens/DashboardScreen";
@@ -201,6 +201,11 @@ function SplashScreen() {
 
 export default function RootNavigator() {
   const status = useAuthStore((s) => s.status);
+  const restoreSession = useAuthStore((s) => s.restoreSession);
+
+  React.useEffect(() => {
+    restoreSession();
+  }, []);
 
   return (
     <NavigationContainer>

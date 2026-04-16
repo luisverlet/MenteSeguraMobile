@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { useAuthStore } from '../../store/auth/useAuthStore'; // Or wherever auth is stored
 
-// Replace with your actual backend URL when provided
-const BASE_URL = 'https://api.example.com'; 
+// Backend URL from Swagger docs
+const BASE_URL = 'https://mentesegura.onrender.com'; 
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,

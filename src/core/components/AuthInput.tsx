@@ -7,6 +7,7 @@ interface AuthInputProps extends TextInputProps {
   iconName: string;
   onRightIconClick?: () => void;
   rightIconName?: string;
+  error?: boolean;
 }
 
 export const AuthInput: React.FC<AuthInputProps> = ({ 
@@ -14,10 +15,11 @@ export const AuthInput: React.FC<AuthInputProps> = ({
   iconName, 
   onRightIconClick, 
   rightIconName, 
+  error,
   ...props 
 }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, error && styles.errorBorder]}>
       <MaterialCommunityIcons name={iconName} size={24} color="#000" style={styles.leftIcon} />
       
       <View style={styles.textContainer}>
@@ -74,5 +76,9 @@ const styles = StyleSheet.create({
   },
   rightIcon: {
     paddingLeft: 10,
+  },
+  errorBorder: {
+    borderColor: '#FF5252',
+    borderWidth: 2,
   },
 });

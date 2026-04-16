@@ -8,9 +8,21 @@ import { AuthStackParamList } from '../../../app/navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RegisterAcademic'>;
 
-export default function RegisterAcademicScreen({ navigation }: Props) {
+export default function RegisterAcademicScreen({ route, navigation }: Props) {
+  const { personalData } = route.params;
   const [programa, setPrograma] = useState('Elegir Programa');
-  const [semestre, setSemestre] = useState('Elegir Semestre');
+  const [semestre, setSemestre] = useState('5');
+
+  const handleNext = () => {
+    navigation.navigate('RegisterCredentials', {
+      personalData,
+      academicData: {
+        faculty: 1, // Mocked as requested
+        program: 1, // Mocked as requested
+        semester: parseInt(semestre)
+      }
+    });
+  };
 
   return (
     <AuthLayout>
@@ -27,7 +39,7 @@ export default function RegisterAcademicScreen({ navigation }: Props) {
         label="Semestre"
         iconName="bank"
         value={semestre}
-        onPress={() => setSemestre('5to')}
+        onPress={() => setSemestre(semestre === '5' ? '6' : '5')}
       />
 
       <View style={styles.buttonRow}>
@@ -40,7 +52,7 @@ export default function RegisterAcademicScreen({ navigation }: Props) {
         <AuthButton 
           title="Siguiente" 
           variant="primary" 
-          onPress={() => navigation.navigate('RegisterCredentials')} 
+          onPress={handleNext} 
           style={styles.btnRight}
         />
       </View>

@@ -1,28 +1,35 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthLayout } from '../../../core/components/AuthLayout';
 import { AuthButton } from '../../../core/components/AuthButton';
 import { AuthStackParamList } from '../../../app/navigation/RootNavigator';
 import { useAuthStore } from '../../../store/auth/useAuthStore';
+import { AuthService } from '../services/AuthService';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RegisterTerms'>;
 
-export default function TermsScreen({ navigation }: Props) {
+export default function TermsScreen({ route, navigation }: Props) {
+  const { registerData } = route.params;
   const login = useAuthStore((s) => s.login);
   const [accepted, setAccepted] = useState(false);
 
   const handleFinish = async () => {
-    if (!accepted) return;
+    if (!accepted) {
+      Alert.alert('Acción requerida', 'Debes aceptar los términos y condiciones para continuar.');
+      return;
+    }
     
-    // Mock successful registration and login
-    await login('mock-token-new', {
-      id: '2',
-      name: 'Nuevo Estudiante',
-      email: 'estudiante@ejemplo.edu',
-      studentCode: '202401',
-    });
+    const result = await AuthService.register(registerData);
+    
+    if (result.success) {
+      // Automatically login after registration
+      Alert.alert('Registro Exitoso', 'Tu cuenta ha sido creada. Iniciando sesión...');
+      await AuthService.login(registerData.email, registerData.password);
+    } else {
+      Alert.alert('Error en el registro', result.message);
+    }
   };
 
   return (

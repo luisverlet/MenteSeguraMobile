@@ -7,7 +7,7 @@ import { AuthBackground } from '../../../core/components/AuthBackground';
 import { AuthButton } from '../../../core/components/AuthButton';
 import { LikertQuestion } from '../components/LikertQuestion';
 import { QUESTIONNAIRES } from '../data/questionnaires';
-import { EvaluacionesStackParamList } from './InstrumentsScreen'; // Assuming they are in a stack
+import { EvaluacionesStackParamList } from './InstrumentsScreen';
 import { useEvaluationStore } from '../../../store/evaluation/useEvaluationStore';
 
 type Props = NativeStackScreenProps<EvaluacionesStackParamList, 'Questionnaire'>;
@@ -18,7 +18,7 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
   const markFormCompleted = useEvaluationStore(s => s.markFormCompleted);
   const setRisks = useEvaluationStore(s => s.setRisks);
 
-  // State to hold answers
+
   const [answers, setAnswers] = useState<Record<string, number>>({});
 
   const handleSelect = (qId: string, value: number) => {
@@ -30,7 +30,7 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
 
     // Validate that all questions have been answered
     const isComplete = form.questions.every(q => answers[q.id] !== undefined);
-    
+
     if (!isComplete) {
       Alert.alert(
         "Formulario incompleto",
@@ -41,7 +41,7 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
 
     console.log(`Saved ${formId} answers:`, answers);
     markFormCompleted(formId);
-    
+
     // Simulate risk calculation for demonstration purposes (e.g. random > 50% for testing or dynamic)
     // Actually, let's just set hardcoded mocks based on the form, or random if we need to see both states.
     // For now we'll simulate high risk to show the button if all 3 are done.
@@ -56,7 +56,7 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <AuthBackground />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
@@ -65,17 +65,17 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
         <Text style={styles.headerTitle}>{form.title}</Text>
       </View>
 
-      <KeyboardAvoidingView 
-        style={styles.flex} 
+      <KeyboardAvoidingView
+        style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.card}>
             <Text style={styles.description}>{form.description}</Text>
-            
+
             <View style={styles.legendContainer}>
               <View style={styles.legendCol}>
                 <Text style={styles.legendText}>{form.legend[0]}</Text>
@@ -101,10 +101,10 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
             ))}
 
             <View style={styles.buttonContainer}>
-              <AuthButton 
-                title="Guardar" 
-                variant="primary" 
-                onPress={handleSave} 
+              <AuthButton
+                title="Guardar"
+                variant="primary"
+                onPress={handleSave}
                 style={styles.saveButton}
               />
             </View>

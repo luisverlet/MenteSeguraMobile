@@ -1765,6 +1765,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-community/datetimepicker@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "@react-native-community/datetimepicker@npm:9.1.0"
+  dependencies:
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    expo: ">=52.0.0"
+    react: "*"
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    expo:
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10c0/3f31baec58c1245204a9b4057809027019aa1abb4b8caea4cb4d44ab70f5a97dfe5114a8aa315299aa47ad31971059181c355aa056d9c3a14b7892582da9f4cb
+  languageName: node
+  linkType: hard
+
 "@react-native/assets-registry@npm:0.81.5":
   version: 0.81.5
   resolution: "@react-native/assets-registry@npm:0.81.5"
@@ -4690,6 +4709,7 @@ __metadata:
   dependencies:
     "@expo-google-fonts/montserrat": "npm:^0.4.2"
     "@react-native-async-storage/async-storage": "npm:2.2.0"
+    "@react-native-community/datetimepicker": "npm:^9.1.0"
     "@react-navigation/bottom-tabs": "npm:^7.15.9"
     "@react-navigation/native": "npm:^7.2.2"
     "@react-navigation/native-stack": "npm:^7.14.11"
@@ -4701,6 +4721,7 @@ __metadata:
     react: "npm:19.1.0"
     react-native: "npm:0.81.5"
     react-native-gesture-handler: "npm:~2.28.0"
+    react-native-modal-datetime-picker: "npm:^18.0.0"
     react-native-paper: "npm:^5.15.1"
     react-native-reanimated: "npm:~4.1.1"
     react-native-safe-area-context: "npm:~5.6.0"
@@ -5962,6 +5983,18 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/28cebd5f1f3632864ff5e342278721d1e5e38627ae73859a8814012116ef15c629fee7137a6c9c97bb05d94bbe639b0b47e69b36fc2735ab53ed31570140663f
+  languageName: node
+  linkType: hard
+
+"react-native-modal-datetime-picker@npm:^18.0.0":
+  version: 18.0.0
+  resolution: "react-native-modal-datetime-picker@npm:18.0.0"
+  dependencies:
+    prop-types: "npm:^15.7.2"
+  peerDependencies:
+    "@react-native-community/datetimepicker": ">=6.7.0"
+    react-native: ">=0.65.0"
+  checksum: 10c0/2217780609af89f1863971dafcdb9deca33663d863ffd65ef43a4b91357a5b623f91ed4f7730231d29e85ac6e5e9d84c11d4c024a791eea70b2df2c423f30610
   languageName: node
   linkType: hard
 

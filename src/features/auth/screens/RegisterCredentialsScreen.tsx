@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthLayout } from '../../../core/components/AuthLayout';
 import { AuthInput } from '../../../core/components/AuthInput';
@@ -9,7 +9,8 @@ import { useAuthStore } from '../../../store/auth/useAuthStore';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RegisterCredentials'>;
 
-export default function RegisterCredentialsScreen({ navigation }: Props) {
+export default function RegisterCredentialsScreen({ route, navigation }: Props) {
+  const { personalData, academicData } = route.params;
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [emailConfirm, setEmailConfirm] = useState('');
@@ -19,7 +20,27 @@ export default function RegisterCredentialsScreen({ navigation }: Props) {
   const [secureConfirm, setSecureConfirm] = useState(true);
 
   const handleNext = () => {
-    navigation.navigate('RegisterTerms');
+    if (!email || !password) {
+      Alert.alert('Error', 'Por favor ingresa todos los campos');
+      return;
+    }
+    if (email !== emailConfirm) {
+      Alert.alert('Error', 'Los correos no coinciden');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+
+    navigation.navigate('RegisterTerms', {
+      registerData: {
+        ...personalData,
+        ...academicData,
+        email,
+        password
+      }
+    });
   };
 
   return (

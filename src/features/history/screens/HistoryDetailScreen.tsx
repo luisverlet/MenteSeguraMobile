@@ -5,20 +5,32 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Svg, { Circle } from 'react-native-svg';
 import { AuthBackground } from '../../../core/components/AuthBackground';
 
-export default function HistoryDetailScreen({ route, navigation }: any) {
-  const { date, depression, anxiety } = route.params;
+// Derive risk level from PHQ-9 raw score (clinical thresholds)
+// 0-4:  Mínimo  → Verde  (Bajo)
+// 5-9:  Leve    → Amarillo (Moderado-Bajo)
+// 10-14: Moderado → Naranja
+// 15-27: Alto / Severo → Rojo
+const getRiskFromScore = (score: number): { label: string; color: string; emoji: string } => {
+  if (score <= 4)  return { label: 'Riesgo Mínimo',   color: '#4CAF50', emoji: '🟢' };
+  if (score <= 9)  return { label: 'Riesgo Leve',     color: '#FFC107', emoji: '🟡' };
+  if (score <= 14) return { label: 'Riesgo Moderado', color: '#FF9800', emoji: '🟠' };
+  if (score <= 19) return { label: 'Riesgo Alto',     color: '#F44336', emoji: '🔴' };
+  return                  { label: 'Riesgo Severo',   color: '#B71C1C', emoji: '🔴' };
+};
 
+export default function HistoryDetailScreen({ route, navigation }: any) {
+  const { date, scorePercent = 0, score = 0 } = route.params;
+
+  // Always derive risk from score, NOT from the backend's risk integer
+  const riskInfo = getRiskFromScore(score);
+
+  // SVG ring settings
   const size = 200;
-  const strokeWidth = 15;
+  const strokeWidth = 16;
   const center = size / 2;
-  const radius1 = (size / 2) - strokeWidth;
-  const radius2 = radius1 - strokeWidth - 5;
-  
-  const circumference1 = 2 * Math.PI * radius1;
-  const circumference2 = 2 * Math.PI * radius2;
-  
-  const depressionOffset = circumference1 - (depression / 100) * circumference1;
-  const anxietyOffset = circumference2 - (anxiety / 100) * circumference2;
+  const radius = (size / 2) - strokeWidth;
+  const circumference = 2 * Math.PI * radius;
+  const ringOffset = circumference - (scorePercent / 100) * circumference;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -33,35 +45,57 @@ export default function HistoryDetailScreen({ route, navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
+          {/* Risk level badge */}
+          <View style={[styles.riskBadge, { backgroundColor: riskInfo.color + '15', borderColor: riskInfo.color }]}>
+            <Text style={[styles.riskBadgeText, { color: riskInfo.color }]}>{riskInfo.emoji}  {riskInfo.label}</Text>
+          </View>
+
+          {/* Ring chart showing score percentage */}
           <View style={styles.chartContainer}>
             <Svg width={size} height={size}>
-              <Circle cx={center} cy={center} r={radius1} stroke="#EAECEF" strokeWidth={strokeWidth} fill="none" />
+              {/* Background ring */}
               <Circle
-                cx={center} cy={center} r={radius1}
-                stroke="#293489" strokeWidth={strokeWidth}
-                strokeDasharray={circumference1} strokeDashoffset={depressionOffset}
-                strokeLinecap="round" fill="none" transform={`rotate(-90 ${center} ${center})`}
+                cx={center} cy={center} r={radius}
+                stroke="#EAECEF" strokeWidth={strokeWidth} fill="none"
               />
-              <Circle cx={center} cy={center} r={radius2} stroke="#EAECEF" strokeWidth={strokeWidth} fill="none" />
+              {/* Score ring */}
               <Circle
-                cx={center} cy={center} r={radius2}
-                stroke="#6B9EFA" strokeWidth={strokeWidth}
-                strokeDasharray={circumference2} strokeDashoffset={anxietyOffset}
-                strokeLinecap="round" fill="none" transform={`rotate(-90 ${center} ${center})`}
+                cx={center} cy={center} r={radius}
+                stroke={riskInfo.color} strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={ringOffset}
+                strokeLinecap="round" fill="none"
+                transform={`rotate(-90 ${center} ${center})`}
               />
             </Svg>
+            {/* Center label */}
+            <View style={styles.chartCenter}>
+              <Text style={[styles.percentText, { color: riskInfo.color }]}>{scorePercent}%</Text>
+              <Text style={styles.chartSubLabel}>PHQ-9</Text>
+            </View>
           </View>
 
-          <View style={styles.resultItem}>
-            <Text style={styles.percentageText}>{depression}%</Text>
-            <Text style={styles.labelSubText}>Riesgo Depresion</Text>
-            <View style={styles.barContainer}><View style={[styles.barFill, { width: `${depression}%` }]} /></View>
+          {/* Score detail row */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailBox}>
+              <Text style={styles.detailValue}>{score}</Text>
+              <Text style={styles.detailLabel}>Puntaje total</Text>
+              <Text style={styles.detailLabelSub}>(máx 27)</Text>
+            </View>
+            <View style={styles.detailDivider} />
+            <View style={styles.detailBox}>
+              <Text style={[styles.detailValue, { color: riskInfo.color }]}>{riskInfo.label}</Text>
+              <Text style={styles.detailLabel}>Nivel de riesgo</Text>
+            </View>
           </View>
 
-          <View style={styles.resultItem}>
-            <Text style={styles.percentageText}>{anxiety}%</Text>
-            <Text style={styles.labelSubText}>Riesgo Ansiedad</Text>
-            <View style={styles.barContainer}><View style={[styles.barFill, { width: `${anxiety}%`, backgroundColor: '#6B9EFA' }]} /></View>
+          {/* Progress bar */}
+          <View style={styles.barSection}>
+            <Text style={styles.barTitle}>Porcentaje de puntaje máximo PHQ-9</Text>
+            <View style={styles.barContainer}>
+              <View style={[styles.barFill, { width: `${scorePercent}%`, backgroundColor: riskInfo.color }]} />
+            </View>
+            <Text style={styles.barLabel}>{scorePercent}% del máximo posible</Text>
           </View>
         </View>
       </ScrollView>
@@ -70,25 +104,148 @@ export default function HistoryDetailScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingTop: 16, alignItems: 'center', flexDirection: 'row' },
-  iconButton: { padding: 4 },
-  dateText: { fontFamily: 'Montserrat-Bold', fontSize: 16, color: '#111', marginLeft: 8, flex: 1, textAlign: 'center', marginRight: 48 },
-  content: { 
-    flexGrow: 1, 
-    padding: 24, 
-    paddingBottom: 40, 
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
     alignItems: 'center',
-    justifyContent: 'center'
+    flexDirection: 'row',
+  },
+  iconButton: {
+    padding: 4,
+  },
+  dateText: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 16,
+    color: '#111',
+    flex: 1,
+    textAlign: 'center',
+    marginRight: 48,
+  },
+  content: {
+    flexGrow: 1,
+    padding: 24,
+    paddingBottom: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF', borderRadius: 24, padding: 32, width: '100%',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 28,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+    alignItems: 'center',
   },
-  chartContainer: { alignItems: 'center', marginBottom: 40 },
-  resultItem: { marginBottom: 24 },
-  percentageText: { fontFamily: 'Montserrat-Bold', fontSize: 32, color: '#293489', lineHeight: 36 },
-  labelSubText: { fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#888', marginBottom: 8 },
-  barContainer: { height: 4, width: '60%', backgroundColor: '#EAECEF', borderRadius: 2, overflow: 'hidden' },
-  barFill: { height: '100%', backgroundColor: '#293489', borderRadius: 2 },
+  riskBadge: {
+    borderRadius: 20,
+    borderWidth: 1.5,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    marginBottom: 28,
+    alignSelf: 'center',
+  },
+  riskBadgeText: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  chartContainer: {
+    width: 200,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+    alignSelf: 'center',
+  },
+  chartCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+  },
+  percentText: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 36,
+    lineHeight: 40,
+  },
+  chartSubLabel: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    width: '100%',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 16,
+    marginBottom: 24,
+    overflow: 'hidden',
+    alignItems: 'center',
+  },
+  detailBox: {
+    flex: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailDivider: {
+    width: 1,
+    height: '60%',
+    backgroundColor: '#DDDFE3',
+  },
+  detailValue: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 20,
+    color: '#293489',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  detailLabel: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+  },
+  detailLabelSub: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 11,
+    color: '#AAA',
+    textAlign: 'center',
+  },
+  barSection: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  barTitle: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  barContainer: {
+    height: 10,
+    width: '100%',
+    backgroundColor: '#EAECEF',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  barFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  barLabel: {
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+  },
 });

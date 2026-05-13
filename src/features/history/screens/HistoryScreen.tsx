@@ -1,27 +1,77 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthBackground } from '../../../core/components/AuthBackground';
-
-const HISTORY_DATA = [
-  { id: '1', name: 'Evaluacion 1', date: '05 - 12 - 2021', depression: 60, anxiety: 50 },
-  { id: '2', name: 'Evaluacion 2', date: '05 - 12 - 2021', depression: 40, anxiety: 30 },
-  { id: '3', name: 'Evaluacion 3', date: '05 - 12 - 2021', depression: 70, anxiety: 65 },
-  { id: '4', name: 'Evaluacion 4', date: '05 - 12 - 2021', depression: 30, anxiety: 20 },
-  { id: '5', name: 'Evaluacion 5', date: '05 - 12 - 2021', depression: 50, anxiety: 40 },
-  { id: '6', name: 'Evaluacion 6', date: '06 - 12 - 2021', depression: 55, anxiety: 45 },
-  { id: '7', name: 'Evaluacion 7', date: '07 - 12 - 2021', depression: 45, anxiety: 35 },
-];
+import { useAuthStore } from '../../../store/auth/useAuthStore';
+import { EvaluationService } from '../../evaluations/services/EvaluationService';
 
 const ITEMS_PER_PAGE = 5;
 
 export default function HistoryScreen({ navigation }: any) {
+  const user = useAuthStore(s => s.user);
+  const [evaluations, setEvaluations] = React.useState<any[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [loading, setLoading] = React.useState(true);
 
-  const totalPages = Math.ceil(HISTORY_DATA.length / ITEMS_PER_PAGE);
+  React.useEffect(() => {
+    const fetchHistory = async () => {
+      if (!user) return;
+      
+      const studentId = user.id;
+      console.log('Fetching history for studentId:', studentId);
+      
+      try {
+        const result = await EvaluationService.getStudentEvaluations(studentId);
+        console.log('History API result:', result);
+
+        if (result.success && result.data && Array.isArray(result.data.history)) {
+          const mapped = result.data.history.map((item: any, index: number) => ({
+            id: String(index),
+            name: `Evaluacion ${result.data.history.length - index}`,
+            date: item.date 
+              ? new Date(item.date).toLocaleDateString('es-ES', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                }).replace(/\//g, ' - ')
+              : 'Fecha N/A',
+            // score: raw PHQ-9 score (0-27). Convert to percentage for the ring.
+            scorePercent: Math.round(((item.score || 0) / 27) * 100),
+            score: item.score || 0,
+            // risk: integer category from backend (0=Bajo, 1=Moderado, 2=Alto)
+            riskLevel: item.risk ?? 0,
+          }));
+          setEvaluations(mapped);
+        } else {
+          console.log('No history found or invalid format');
+          setEvaluations([]);
+        }
+      } catch (error) {
+        console.error('Error in fetchHistory:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [user]);
+
+  const totalPages = Math.ceil(evaluations.length / ITEMS_PER_PAGE) || 1;
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentItems = HISTORY_DATA.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const currentItems = evaluations.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <AuthBackground />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#293489" />
+          <Text style={{ marginTop: 10, fontFamily: 'Montserrat-Medium' }}>Cargando historial...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -37,67 +87,78 @@ export default function HistoryScreen({ navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.tableCard}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.headerCell}>Evaluacion</Text>
-            <Text style={styles.headerCell}>Fecha</Text>
-          </View>
-          
-          <View style={styles.divider} />
-
-          <View style={styles.rowsContainer}>
-            {currentItems.map((item) => (
-              <View key={item.id}>
-                <View style={styles.tableRow}>
-                  <TouchableOpacity 
-                    onPress={() => navigation.navigate('HistoryDetail', item)}
-                  >
-                    <Text style={styles.evalLink}>{item.name}</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.dateCell}>{item.date}</Text>
-                </View>
-                <View style={styles.rowDivider} />
-              </View>
-            ))}
-          </View>
-
-          {/* Pagination Selector */}
-          <View style={styles.pagination}>
-            <TouchableOpacity 
-              disabled={currentPage === 1}
-              onPress={() => setCurrentPage(p => p - 1)}
-            >
-              <MaterialCommunityIcons 
-                name="chevron-left" 
-                size={24} 
-                color={currentPage === 1 ? "#CCC" : "#293489"} 
-              />
-            </TouchableOpacity>
-
-            <View style={styles.pageNumbers}>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <TouchableOpacity 
-                  key={i} 
-                  onPress={() => setCurrentPage(i + 1)}
-                  style={[styles.pageButton, currentPage === i + 1 && styles.activePageButton]}
-                >
-                  <Text style={[styles.pageText, currentPage === i + 1 && styles.activePageText]}>
-                    {i + 1}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+          {evaluations.length === 0 ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <MaterialCommunityIcons name="clipboard-text-outline" size={64} color="#CCC" />
+              <Text style={{ fontFamily: 'Montserrat-Medium', color: '#666', marginTop: 16, textAlign: 'center' }}>
+                Aún no tienes evaluaciones registradas.
+              </Text>
             </View>
+          ) : (
+            <>
+              <View style={styles.tableHeader}>
+                <Text style={styles.headerCell}>Evaluacion</Text>
+                <Text style={styles.headerCell}>Fecha</Text>
+              </View>
+              
+              <View style={styles.divider} />
 
-            <TouchableOpacity 
-              disabled={currentPage === totalPages}
-              onPress={() => setCurrentPage(p => p + 1)}
-            >
-              <MaterialCommunityIcons 
-                name="chevron-right" 
-                size={24} 
-                color={currentPage === totalPages ? "#CCC" : "#293489"} 
-              />
-            </TouchableOpacity>
-          </View>
+              <View style={styles.rowsContainer}>
+                {currentItems.map((item) => (
+                  <View key={item.id}>
+                    <View style={styles.tableRow}>
+                      <TouchableOpacity 
+                        onPress={() => navigation.navigate('HistoryDetail', item)}
+                      >
+                        <Text style={styles.evalLink}>{item.name}</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.dateCell}>{item.date}</Text>
+                    </View>
+                    <View style={styles.rowDivider} />
+                  </View>
+                ))}
+              </View>
+
+              {/* Pagination Selector */}
+              <View style={styles.pagination}>
+                <TouchableOpacity 
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(p => p - 1)}
+                >
+                  <MaterialCommunityIcons 
+                    name="chevron-left" 
+                    size={24} 
+                    color={currentPage === 1 ? "#CCC" : "#293489"} 
+                  />
+                </TouchableOpacity>
+
+                <View style={styles.pageNumbers}>
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <TouchableOpacity 
+                      key={i} 
+                      onPress={() => setCurrentPage(i + 1)}
+                      style={[styles.pageButton, currentPage === i + 1 && styles.activePageButton]}
+                    >
+                      <Text style={[styles.pageText, currentPage === i + 1 && styles.activePageText]}>
+                        {i + 1}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity 
+                  disabled={currentPage === totalPages}
+                  onPress={() => setCurrentPage(p => p + 1)}
+                >
+                  <MaterialCommunityIcons 
+                    name="chevron-right" 
+                    size={24} 
+                    color={currentPage === totalPages ? "#CCC" : "#293489"} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

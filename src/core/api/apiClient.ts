@@ -9,14 +9,14 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 60000, // 60s — Render.com free tier can take up to 60s to wake from sleep (cold start)
 });
 
 // Add interceptors to automatically attach tokens if needed
 apiClient.interceptors.request.use(
   (config) => {
     // Basic example of getting a token from Zustand (may need adjustments based on persistence)
-    const token = useAuthStore.getState().user?.role; // Adjust property as needed based on actual token storage
+    const token = useAuthStore.getState().token; // Get the actual token from the store
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`; 
     }

@@ -30,6 +30,7 @@ export default function InstrumentsScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate('Home' as any)} style={styles.iconButton}>
           <MaterialCommunityIcons name="chevron-left" size={40} color="#333" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Formularios</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -78,7 +79,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     zIndex: 10,
-    alignItems: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 20,
+    color: '#333',
+    marginLeft: 8,
   },
   iconButton: {
     padding: 4,

@@ -92,6 +92,7 @@ export type MainTabParamList = {
   History: undefined;
   Atencion: undefined;
   Citas: undefined;
+  Profile: undefined;
 };
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
@@ -121,6 +122,7 @@ const TAB_ICONS: Record<keyof MainTabParamList, string> = {
   History: "file-clock-outline",
   Atencion: "map-marker-path",
   Citas: "calendar-month-outline",
+  Profile: "account",
 };
 
 import QuestionnaireScreen from "../../features/evaluations/screens/QuestionnaireScreen";
@@ -131,6 +133,20 @@ export type EvaluationsStackParamList = {
   Questionnaire: { formId: string };
   Result: undefined;
 };
+
+export type ProfileStackParamList = {
+  ProfileDetail: undefined;
+};
+
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
+
+function ProfileNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileDetail" component={EditProfileScreen} />
+    </ProfileStack.Navigator>
+  );
+}
 
 const EvaluationsStack = createNativeStackNavigator<EvaluationsStackParamList>();
 
@@ -151,9 +167,9 @@ function MainNavigator() {
     <MainTab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#293489', // Dark blue from mockup
+        tabBarActiveTintColor: '#293489',
         tabBarInactiveTintColor: '#999',
-        tabBarShowLabel: false, // Hide text under icons per mockup
+        tabBarShowLabel: false,
         tabBarStyle: {
           display: route.name === 'Home' ? 'none' : 'flex',
           backgroundColor: theme.colors.surface,
@@ -182,6 +198,7 @@ function MainNavigator() {
       <MainTab.Screen name="History" component={HistoryNavigator} />
       <MainTab.Screen name="Atencion" component={CareNavigator} />
       <MainTab.Screen name="Citas" component={AppointmentsNavigator} />
+      <MainTab.Screen name="Profile" component={ProfileNavigator} options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }} />
     </MainTab.Navigator>
   );
 }

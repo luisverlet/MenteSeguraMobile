@@ -8,21 +8,25 @@ import {
   Montserrat_600SemiBold,
   Montserrat_700Bold
 } from "@expo-google-fonts/montserrat";
+import * as Font from 'expo-font';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AppProviders from "./src/core/providers/AppProviders";
 import RootNavigator from "./src/app/navigation/RootNavigator";
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     "Montserrat-Regular": Montserrat_400Regular,
     "Montserrat-Medium": Montserrat_500Medium,
     "Montserrat-SemiBold": Montserrat_600SemiBold,
     "Montserrat-Bold": Montserrat_700Bold,
+    ...MaterialCommunityIcons.font,
   });
 
-  if (!fontsLoaded) {
+  // If fonts failed to load or there's an error, we still want to show the app on web
+  if (!fontsLoaded && !fontError) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#3A7BD5" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#293489" />
       </View>
     );
   }

@@ -17,28 +17,23 @@ export default function LoginScreen({ navigation }: Props) {
   const [secureText, setSecureText] = useState(true);
   const [hasError, setHasError] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   const handleLogin = async () => {
-    setHasError(false);
-    
-    // TEMPORARY BYPASS: Access without backend configuration
     if (!email || !password) {
-      console.log('Bypassing login for preview...');
-      await useAuthStore.getState().login('mock-token-preview', {
-        id: 'preview',
-        name: 'Usuario Invitado',
-        email: 'invitado@mentesegura.com',
-        studentCode: 'PREVIEW'
-      });
+      Alert.alert('Error', 'Por favor ingresa todos los campos');
       return;
     }
 
+    setLoading(true);
+    setHasError(false);
+    
     const result = await AuthService.login(email, password);
+    setLoading(false);
+    
     if (!result.success) {
       setHasError(true);
-      const displayMsg = result.message.includes('JWT_SECRET') 
-        ? 'Error interno del servidor (JWT_SECRET). Entra sin datos para probar el diseño.' 
-        : result.message;
-      Alert.alert('Error de inicio de sesión', displayMsg);
+      Alert.alert('Error de inicio de sesión', result.message);
     }
   };
 
@@ -77,6 +72,7 @@ export default function LoginScreen({ navigation }: Props) {
         title="Ingresar" 
         onPress={handleLogin} 
         style={styles.loginButton}
+        loading={loading}
       />
       
       <View style={styles.registerContainer}>

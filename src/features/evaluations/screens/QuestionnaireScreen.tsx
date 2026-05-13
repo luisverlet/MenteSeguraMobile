@@ -9,6 +9,7 @@ import { LikertQuestion } from '../components/LikertQuestion';
 import { QUESTIONNAIRES } from '../data/questionnaires';
 import { EvaluacionesStackParamList } from './InstrumentsScreen';
 import { useEvaluationStore } from '../../../store/evaluation/useEvaluationStore';
+import { EvaluationService, PHQ9Answers } from '../services/EvaluationService';
 
 type Props = NativeStackScreenProps<EvaluacionesStackParamList, 'Questionnaire'>;
 
@@ -17,15 +18,16 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
   const form = QUESTIONNAIRES[formId];
   const markFormCompleted = useEvaluationStore(s => s.markFormCompleted);
   const setRisks = useEvaluationStore(s => s.setRisks);
-
+  const setLastResult = useEvaluationStore(s => s.setLastResult);
 
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(false);
 
   const handleSelect = (qId: string, value: number) => {
     setAnswers(prev => ({ ...prev, [qId]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form) return;
 
     // Validate that all questions have been answered
@@ -39,16 +41,39 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
       return;
     }
 
-    console.log(`Saved ${formId} answers:`, answers);
-    markFormCompleted(formId);
+    setLoading(true);
+    try {
+      if (formId === 'PHQ9') {
+        // Map answers to backend format: question1, question2...
+        const formattedAnswers: any = {};
+        form.questions.forEach(q => {
+          formattedAnswers[`question${q.id}`] = answers[q.id];
+        });
 
-    // Simulate risk calculation for demonstration purposes (e.g. random > 50% for testing or dynamic)
-    // Actually, let's just set hardcoded mocks based on the form, or random if we need to see both states.
-    // For now we'll simulate high risk to show the button if all 3 are done.
-    if (formId === 'PHQ9') setRisks(60, useEvaluationStore.getState().anxietyRisk);
-    if (formId === 'GAD7') setRisks(useEvaluationStore.getState().depressionRisk, 50);
-
-    navigation.goBack();
+        const result = await EvaluationService.predict(formattedAnswers as PHQ9Answers);
+        
+        if (result.success) {
+          const totalScore = result.data.total_score ?? 0;
+          const scorePercent = Math.round((totalScore / 27) * 100);
+          const prob = Math.round(result.data.probabilidad * 100);
+          
+          setRisks(prob, useEvaluationStore.getState().anxietyRisk);
+          setLastResult(totalScore, scorePercent);
+          markFormCompleted(formId);
+          navigation.replace('Result');
+        } else {
+          Alert.alert('Error', result.message);
+        }
+      } else {
+        // For other forms not yet implemented in backend, just mark as completed
+        markFormCompleted(formId);
+        navigation.goBack();
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Hubo un problema al enviar la evaluación');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!form) return null;
@@ -106,6 +131,7 @@ export default function QuestionnaireScreen({ route, navigation }: Props) {
                 variant="primary"
                 onPress={handleSave}
                 style={styles.saveButton}
+                loading={loading}
               />
             </View>
           </View>

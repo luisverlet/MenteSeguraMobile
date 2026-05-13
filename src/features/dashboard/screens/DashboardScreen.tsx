@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthBackground } from '../../../core/components/AuthBackground';
 import { SidebarMenu } from '../components/SidebarMenu';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';

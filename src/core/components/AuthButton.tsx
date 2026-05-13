@@ -1,6 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, View, Dimensions } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, View, Dimensions, ActivityIndicator } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface AuthButtonProps {
   title: string;
@@ -8,6 +7,7 @@ interface AuthButtonProps {
   variant?: 'primary' | 'secondary';
   style?: ViewStyle;
   iconName?: string;
+  loading?: boolean;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -17,22 +17,31 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   onPress, 
   variant = 'primary',
   style,
-  iconName
+  iconName,
+  loading = false
 }) => {
   return (
     <TouchableOpacity 
       style={[
         styles.button, 
         variant === 'primary' ? styles.primary : styles.secondary,
-        style
+        style,
+        loading && styles.disabled
       ]} 
       onPress={onPress}
+      disabled={loading}
     >
       <View style={styles.innerContent}>
-        {iconName && (
-          <MaterialCommunityIcons name={iconName} size={28} color="#FFF" style={styles.icon} />
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <>
+            {iconName && (
+              <MaterialCommunityIcons name={iconName} size={28} color="#FFF" style={styles.icon} />
+            )}
+            <Text style={styles.text}>{title}</Text>
+          </>
         )}
-        <Text style={styles.text}>{title}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -69,5 +78,8 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 10,
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
